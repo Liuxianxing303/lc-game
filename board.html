@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>大屏排行榜 · 学习与创造力</title>
+<style>
+:root{
+  --bg:#0d1117; --card:#161c26; --line:#232b39;
+  --txt:#e8ecf4; --dim:#7d8a9e;
+  --gold:#ffc94d; --green:#3ddc97; --blue:#5b9cf8;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--txt);
+  font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+  min-height:100vh;}
+.wrap{display:grid;grid-template-columns:1fr 400px;height:100vh;}
+
+.left{padding:28px 36px;display:flex;flex-direction:column;overflow:hidden;}
+.hd{display:flex;justify-content:space-between;align-items:flex-end;
+    padding-bottom:16px;border-bottom:2px solid var(--line);margin-bottom:18px;}
+.hd h1{font-size:31px;font-weight:800;letter-spacing:-.5px;}
+.hd h1 em{font-style:normal;color:var(--gold);}
+.hd .meta{text-align:right;font-size:12.5px;color:var(--dim);line-height:1.9;}
+.hd .meta b{color:var(--gold);font-size:23px;font-weight:800;}
+
+.board{flex:1;overflow-y:auto;padding-right:8px;}
+.board::-webkit-scrollbar{width:6px;}
+.board::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px;}
+
+.row{display:grid;grid-template-columns:54px 1fr 108px 84px;align-items:center;gap:14px;
+  background:var(--card);border-radius:14px;padding:15px 20px;margin-bottom:9px;
+  border:1px solid transparent;transition:.4s;position:relative;overflow:hidden;}
+.row.top1{border-color:var(--gold);background:linear-gradient(90deg,rgba(255,201,77,.14),var(--card));}
+.row.top1::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--gold);}
+.row.top2{border-color:#b9c4d6;}
+.row.top3{border-color:#c08a5a;}
+.rk{font-size:25px;font-weight:900;color:var(--dim);text-align:center;font-variant-numeric:tabular-nums;}
+.top1 .rk{color:var(--gold);} .top2 .rk{color:#b9c4d6;} .top3 .rk{color:#c08a5a;}
+.nm{font-size:19px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.dots{display:flex;gap:5px;margin-top:8px;}
+.dots i{width:23px;height:5px;border-radius:3px;background:var(--line);transition:.3s;}
+.dots i.d{background:var(--green);}
+.sc{font-size:29px;font-weight:900;text-align:right;font-variant-numeric:tabular-nums;color:var(--gold);}
+.sc small{font-size:12px;color:var(--dim);font-weight:600;}
+.st{font-size:12px;text-align:center;color:var(--dim);}
+.st.fin{color:var(--green);font-weight:700;}
+.del{position:absolute;right:4px;top:4px;width:20px;height:20px;border-radius:6px;
+  background:transparent;border:none;color:#3a4354;font-size:14px;cursor:pointer;line-height:1;display:none;}
+.row:hover .del{display:block;color:#7d8a9e;}
+.empty{text-align:center;padding:80px 20px;color:var(--dim);font-size:14.5px;line-height:2.1;}
+
+/* 右栏 */
+.right{background:#0a0e14;border-left:1px solid var(--line);padding:26px 24px;
+  display:flex;flex-direction:column;overflow-y:auto;}
+.sec{font-size:10.5px;letter-spacing:2px;color:var(--dim);margin-bottom:9px;font-weight:700;}
+.entry{display:flex;flex-direction:column;gap:9px;margin-bottom:18px;}
+textarea{
+  width:100%;background:var(--card);border:1.5px solid var(--line);border-radius:12px;
+  color:var(--txt);font-size:13.5px;line-height:1.7;padding:13px;font-family:ui-monospace,Menlo,monospace;
+  resize:none;outline:none;transition:.2s;height:74px;
+}
+textarea:focus{border-color:var(--gold);}
+textarea::placeholder{color:#4a5468;}
+button{font-family:inherit;cursor:pointer;border:none;border-radius:12px;transition:.15s;}
+button:active{transform:scale(.98);}
+.addbtn{background:var(--gold);color:#0d1117;padding:14px;font-size:14.5px;font-weight:700;letter-spacing:.5px;}
+.row2{display:flex;gap:9px;}
+.row2 button{flex:1;background:var(--card);color:var(--txt);border:1px solid var(--line);
+  padding:11px;font-size:12.5px;font-weight:600;}
+
+.stat{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:4px 0 20px;}
+.stat div{background:var(--card);border-radius:12px;padding:13px;text-align:center;}
+.stat b{display:block;font-size:23px;color:var(--gold);font-weight:900;}
+.stat span{font-size:10.5px;color:var(--dim);letter-spacing:1px;}
+
+.tips{background:var(--card);border-left:3px solid var(--blue);border-radius:0 10px 10px 0;
+  padding:12px 14px;font-size:11.5px;line-height:1.9;color:#a8b5c9;margin-bottom:18px;}
+.tips b{color:var(--blue);}
+.feed{flex:1;overflow-y:auto;font-size:12px;line-height:1.9;color:var(--dim);}
+.feed .fl{padding:5px 0;border-bottom:1px solid var(--line);}
+.feed .fl b{color:var(--txt);}
+.feed .fl i{color:var(--gold);font-style:normal;font-weight:700;}
+
+#qrimg{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:300;display:none;
+  align-items:center;justify-content:center;padding:30px;}
+#qrimg.on{display:flex;}
+#qrimg .b{background:#fff;padding:20px;border-radius:20px;max-width:min(90vw,420px);}
+#qrimg img{width:100%;display:block;border-radius:8px;}
+#qrimg p{color:#333;text-align:center;font-size:14px;margin-top:12px;font-family:monospace;word-break:break-all;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="left">
+    <div class="hd">
+      <div>
+        <h1>学习与创造力 · <em>闯关排行榜</em></h1>
+        <div style="font-size:12.5px;color:var(--dim);margin-top:6px;">
+          五关：记忆 → 动机 → 技能 → 创造 → 迁移
+        </div>
+      </div>
+      <div class="meta">已录入 <b id="cnt">0</b> 组<br><span id="clock" style="font-size:12px;"></span></div>
+    </div>
+    <div class="board" id="board">
+      <div class="empty">还没有队伍成绩<br>用右侧输入框录入各组报上来的成绩码</div>
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="sec">录入成绩码</div>
+    <div class="entry">
+      <textarea id="code" placeholder="粘贴或输入成绩码：&#10;齿轮不卡组|294|100,100,72,22,-"></textarea>
+      <button class="addbtn" onclick="addCode()">录 入</button>
+      <div class="row2">
+        <button onclick="addDemo()">填充演示数据</button>
+        <button onclick="clearAll()">清空全部</button>
+      </div>
+    </div>
+
+    <div class="stat">
+      <div><b id="st1">0</b><span>已录入</span></div>
+      <div><b id="st2">0</b><span>已通关</span></div>
+    </div>
+
+    <div class="tips">
+      <b>课堂用法：</b>各组在手机上通关后会点「生成成绩码」并举手——老师把码粘到上面，点录入，大屏立刻更新排名。全程 5 秒一组。<br><br>
+      <b>没有二维码扫描枪也没关系</b>，让学生直接念出「组名 + 总分」三个数字也行，手动填。
+    </div>
+
+    <div class="sec">录入记录</div>
+    <div class="feed" id="feed"><div style="color:#4a5364;">暂无记录</div></div>
+  </div>
+</div>
+
+<div id="qrimg" onclick="this.classList.remove('on')"><div class="b"><img id="qi"><p id="qu"></p></div></div>
+
+<script>
+const KEY = "lc_board_v1";
+let data = [];
+const $ = s=>document.querySelector(s);
+
+function load(){
+  try{ data = JSON.parse(localStorage.getItem(KEY)||"[]"); }catch(e){ data=[]; }
+}
+function save(){ localStorage.setItem(KEY, JSON.stringify(data)); }
+
+function parseCode(str){
+  // 兼容：组名|总分|1,2,3,4,5
+  const s = (str||"").trim().replace(/\s+/g," ");
+  if(!s) return null;
+  const parts = s.split("|");
+  if(parts.length >= 2){
+    const name = parts[0].trim().slice(0,16);
+    const total = parseInt(parts[1],10);
+    if(!name || isNaN(total)) return null;
+    let levels = {};
+    if(parts[2]){
+      parts[2].split(",").forEach((v,i)=>{
+        const n = parseInt(v,10);
+        if(!isNaN(n)) levels[i+1] = n;
+      });
+    }
+    return {name, score: total, levels};
+  }
+  // 兼容：组名 294（空格分隔）
+  const m = s.match(/^(.+?)[\s,，]+(\d{1,3})$/);
+  if(m) return {name: m[1].trim().slice(0,16), score: parseInt(m[2],10), levels:{}};
+  return null;
+}
+
+function addCode(){
+  const raw = $('#code').value;
+  const rec = parseCode(raw);
+  if(!rec){ alert("格式不对。正确格式：组名|总分|各关分\n例如：齿轮不卡组|294|100,100,72,22,-"); return; }
+  // 同名覆盖
+  const i = data.findIndex(x=>x.name===rec.name);
+  rec.time = Date.now();
+  if(i>=0) data[i] = rec; else data.push(rec);
+  save(); render();
+  $('#code').value = "";
+}
+
+function addDemo(){
+  const demo = [
+    ["齿轮不卡组", 100,100,72,45,60],
+    ["电路抢修队", 88,67,100,35,40],
+    ["焊缝小分队", 64,67,50,20,0],
+    ["扭矩大魔王", 96,33,50,0,0],
+    ["示波之眼", 40,0,0,0,0]
+  ];
+  data = demo.map(d=>({
+    name:d[0],
+    levels: {1:d[1],2:d[2],3:d[3],4:d[4],5:d[5]},
+    score: d.slice(1).filter(x=>x>0&&x!==-1).reduce((a,b)=>a+(b>0?b:0),0),
+    time: Date.now()
+  }));
+  // 修正：- 表示未做
+  data.forEach(t=>{
+    const ls={};
+    Object.entries(t.levels).forEach(([k,v])=>{ if(v>0) ls[k]=v; });
+    t.levels = ls;
+    t.score = Object.values(ls).reduce((a,b)=>a+b,0);
+  });
+  save(); render();
+}
+
+function clearAll(){
+  if(confirm("清空所有队伍成绩？")){ data=[]; save(); render(); }
+}
+function del(name){
+  data = data.filter(x=>x.name!==name); save(); render();
+}
+
+function render(){
+  const sorted = data.slice().sort((a,b)=> b.score-a.score);
+  $('#cnt').textContent = data.length;
+  $('#st1').textContent = data.length;
+  $('#st2').textContent = data.filter(t=>Object.keys(t.levels||{}).length>=5).length;
+
+  const b = $('#board');
+  if(!sorted.length){
+    b.innerHTML = '<div class="empty">还没有队伍成绩<br>用右侧输入框录入各组报上来的成绩码</div>';
+    return;
+  }
+  b.innerHTML = sorted.map((t,i)=>{
+    const rank = i+1;
+    const cls = rank<=3 ? ' top'+rank : '';
+    let dots = '';
+    for(let k=1;k<=5;k++){
+      dots += `<i class="${t.levels && t.levels[k]!==undefined ? 'd':''}"></i>`;
+    }
+    const cntLv = Object.keys(t.levels||{}).length;
+    const fin = cntLv>=5;
+    return `<div class="row${cls}">
+      <button class="del" onclick="del('${t.name.replace(/'/g,"\\'")}')">×</button>
+      <div class="rk">${rank}</div>
+      <div><div class="nm">${esc(t.name)}</div><div class="dots">${dots}</div></div>
+      <div class="sc">${t.score}<small> 分</small></div>
+      <div class="st ${fin?'fin':''}">${fin?'已通关':'第'+(cntLv+1)+'关'}</div>
+    </div>`;
+  }).join('');
+
+  $('#feed').innerHTML = data.slice().reverse().map(t=>
+    `<div class="fl"><b>${esc(t.name)}</b> · <i>${t.score}</i> 分 · ${Object.keys(t.levels||{}).length} 关</div>`
+  ).join('') || '<div style="color:#4a5364;">暂无记录</div>';
+}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+$('#code').addEventListener('keydown', e=>{
+  if(e.key==='Enter' && (e.ctrlKey||e.metaKey)) addCode();
+});
+
+setInterval(()=>{
+  $('#clock').textContent = new Date().toLocaleTimeString('zh-CN',{hour12:false});
+}, 1000);
+
+load(); render();
+</script>
+</body>
+</html>

@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#141821">
+<meta name="description" content="学习与创造力 · 五关闯关游戏">
+<title>学习与创造力 · 闯关</title>
+<style>
+:root{
+  --bg:#141821; --card:#1e2430; --line:#2e3646;
+  --txt:#e8ecf4; --dim:#8b97ad;
+  --gold:#ffc94d; --red:#ff5f5f; --green:#3ddc97; --blue:#5b9cf8;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{
+  background:var(--bg);color:var(--txt);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+  overflow-x:hidden;-webkit-font-smoothing:antialiased;
+}
+.screen{display:none;min-height:100vh;min-height:100dvh;padding:22px 18px 96px;flex-direction:column;}
+.screen.on{display:flex;}
+
+/* 开场 */
+.hero{flex:1;display:flex;flex-direction:column;justify-content:center;}
+.logo{font-size:10px;letter-spacing:5px;color:var(--gold);margin-bottom:16px;font-weight:700;}
+h1.big{font-size:36px;line-height:1.22;font-weight:800;letter-spacing:-.5px;margin-bottom:12px;}
+h1.big em{font-style:normal;color:var(--gold);}
+.sub{font-size:13px;color:var(--dim);line-height:2;margin-bottom:30px;}
+.field{margin-bottom:18px;}
+.field label{display:block;font-size:11px;letter-spacing:2px;color:var(--dim);margin-bottom:8px;font-weight:600;}
+input[type=text]{
+  width:100%;background:var(--card);border:1.5px solid var(--line);
+  color:var(--txt);font-size:17px;padding:15px 16px;border-radius:14px;
+  font-family:inherit;outline:none;transition:.2s;
+}
+input[type=text]:focus{border-color:var(--gold);background:#232a38;}
+.btn{
+  width:100%;border:none;border-radius:14px;padding:17px;
+  font-size:16px;font-weight:700;font-family:inherit;
+  background:var(--gold);color:#141821;letter-spacing:1px;
+  transition:.15s;cursor:pointer;
+}
+.btn:active{transform:scale(.97);}
+.btn:disabled{opacity:.4;}
+.btn.ghost{background:transparent;border:1.5px solid var(--line);color:var(--txt);}
+
+/* 顶部 */
+.top{display:flex;align-items:center;justify-content:space-between;padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:18px;}
+.top .name{font-size:14px;font-weight:700;max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.top .sc{font-size:13px;color:var(--dim);}
+.top .sc b{color:var(--gold);font-size:18px;font-variant-numeric:tabular-nums;}
+
+/* 进度 */
+.steps{display:flex;gap:6px;margin-bottom:22px;}
+.steps i{flex:1;height:4px;border-radius:2px;background:var(--line);transition:.3s;}
+.steps i.done{background:var(--green);}
+.steps i.now{background:var(--gold);}
+
+/* 关卡标题 */
+.lvno{font-size:11px;letter-spacing:3px;color:var(--gold);font-weight:700;margin-bottom:9px;}
+.lvt{font-size:25px;font-weight:800;margin-bottom:8px;letter-spacing:-.5px;line-height:1.3;}
+.lvd{font-size:13px;color:var(--dim);line-height:1.85;margin-bottom:22px;}
+.lvd b{color:var(--gold);}
+
+/* 记忆 */
+.wordgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+.wordgrid span{
+  background:var(--card);border:1px solid var(--line);border-radius:10px;
+  padding:14px 3px;text-align:center;font-size:13.5px;font-weight:600;
+  overflow:hidden;
+}
+.timer{text-align:center;font-size:42px;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums;margin:8px 0 14px;}
+.timer.warn{color:var(--red);animation:pulse .6s infinite;}
+@keyframes pulse{50%{opacity:.35;}}
+
+/* 选项 */
+.opt{
+  display:block;width:100%;text-align:left;
+  background:var(--card);border:1.5px solid var(--line);
+  border-radius:14px;padding:16px 15px;margin-bottom:10px;
+  color:var(--txt);font-size:15px;line-height:1.6;font-family:inherit;
+  transition:.15s;cursor:pointer;position:relative;padding-right:44px;
+}
+.opt:active{transform:scale(.985);}
+.opt.sel{border-color:var(--gold);background:#2a2a1e;}
+.opt.sel::after{
+  content:"✓";position:absolute;right:15px;top:50%;transform:translateY(-50%);
+  color:var(--gold);font-weight:800;font-size:17px;
+}
+.opt .idx{
+  display:inline-block;width:20px;height:20px;line-height:20px;text-align:center;
+  border-radius:6px;background:var(--line);font-size:11px;font-weight:700;
+  margin-right:9px;color:var(--dim);
+}
+.opt.sel .idx{background:var(--gold);color:#141821;}
+
+.question{font-size:16.5px;font-weight:700;line-height:1.65;margin-bottom:16px;}
+.qnum{font-size:11px;color:var(--dim);letter-spacing:2px;margin-bottom:10px;font-weight:600;}
+
+/* 反馈 */
+.fb{border-radius:14px;padding:15px 16px;margin:14px 0;font-size:13.5px;line-height:1.8;}
+.fb.good{background:#16301f;border-left:3px solid var(--green);}
+.fb.bad{background:#301a1a;border-left:3px solid var(--red);}
+.fb.mid{background:#2a2a1e;border-left:3px solid var(--gold);}
+.fb.info{background:#1a2536;border-left:3px solid var(--blue);}
+.fb b{color:var(--gold);}
+.fb .hd{font-weight:700;margin-bottom:7px;font-size:12.5px;opacity:.85;}
+
+/* 底部 */
+.bottom{
+  position:fixed;left:0;right:0;bottom:0;padding:12px 18px calc(14px + env(safe-area-inset-bottom));
+  background:linear-gradient(transparent,var(--bg) 32%);z-index:50;
+}
+
+/* 结果 */
+.scorebig{font-size:78px;font-weight:900;color:var(--gold);text-align:center;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-3px;}
+.scorebig small{font-size:22px;color:var(--dim);font-weight:600;margin-left:4px;}
+.scorelbl{text-align:center;font-size:11px;letter-spacing:4px;color:var(--dim);margin:10px 0 26px;}
+
+.gain{background:var(--card);border-radius:16px;padding:17px;margin-bottom:13px;border:1px solid var(--line);}
+.gain .h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;gap:10px;}
+.gain .h span{font-size:12px;color:var(--dim);letter-spacing:1px;}
+.gain .h b{font-size:24px;color:var(--green);white-space:nowrap;}
+.gain p{font-size:13px;line-height:1.85;color:#b9c4d6;}
+
+/* 卡槽 */
+.cardshelf{display:flex;gap:6px;margin:16px 0;}
+.cardshelf i{
+  flex:1;height:46px;border-radius:9px;border:1.5px dashed var(--line);
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;color:#4a5468;font-style:normal;font-weight:700;
+  text-align:center;line-height:1.3;transition:.3s;padding:2px;
+}
+.cardshelf i.got{border-style:solid;border-color:var(--gold);background:rgba(255,201,77,.12);color:var(--gold);}
+
+/* 文本 */
+textarea{
+  width:100%;background:var(--card);border:1.5px solid var(--line);
+  color:var(--txt);font-size:15px;line-height:1.85;padding:15px;
+  border-radius:14px;font-family:inherit;outline:none;resize:none;transition:.2s;
+}
+textarea:focus{border-color:var(--gold);}
+.hintbox{background:var(--card);border-left:3px solid var(--blue);border-radius:0 12px 12px 0;padding:13px 15px;font-size:12.5px;line-height:1.8;color:#a8b5c9;margin-bottom:10px;}
+.hintbox b{color:var(--blue);}
+.hintbox.no{border-left-color:var(--red);}
+.hintbox.no b{color:var(--red);}
+
+/* toast */
+.toast{
+  position:fixed;left:50%;top:42%;transform:translate(-50%,-50%) scale(.9);
+  background:rgba(15,19,27,.97);border:1px solid var(--line);
+  padding:16px 24px;border-radius:14px;font-size:14px;font-weight:600;
+  opacity:0;pointer-events:none;transition:.25s;z-index:999;
+  text-align:center;max-width:82vw;line-height:1.7;
+}
+.toast.on{opacity:1;transform:translate(-50%,-50%) scale(1);}
+
+.center{flex:1;display:flex;flex-direction:column;justify-content:center;text-align:center;}
+.emoji{font-size:54px;margin-bottom:16px;}
+
+/* 成绩码弹窗 */
+.modal{
+  position:fixed;inset:0;background:rgba(8,11,16,.9);z-index:200;
+  display:none;align-items:center;justify-content:center;padding:24px;
+  backdrop-filter:blur(4px);
+}
+.modal.on{display:flex;}
+.modal .box{background:var(--card);border-radius:20px;padding:26px 22px;width:100%;max-width:340px;text-align:center;border:1px solid var(--line);}
+.modal h3{font-size:17px;margin-bottom:8px;}
+.modal p{font-size:12.5px;color:var(--dim);line-height:1.8;margin-bottom:18px;}
+.code{
+  background:#0f131b;border:2px dashed var(--gold);border-radius:14px;padding:18px 10px;
+  font-family:ui-monospace,Menlo,monospace;font-size:15px;font-weight:700;
+  color:var(--gold);letter-spacing:1px;word-break:break-all;line-height:1.6;margin-bottom:16px;
+  user-select:all;
+}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- 1 加入 -->
+<div class="screen on" id="s-join">
+  <div class="hero">
+    <div class="logo">LEARNING &amp; CREATIVITY</div>
+    <h1 class="big">五关闯过，<br>你得<em>升级</em>什么？</h1>
+    <p class="sub">记忆 · 动机 · 技能 · 创造 · 迁移<br>每关一张策略卡，五张集齐才算通关</p>
+    <div class="field">
+      <label>给你们的队伍起个名字</label>
+      <input type="text" id="teamname" placeholder="例如：齿轮不卡组" maxlength="12" autocomplete="off">
+    </div>
+    <button class="btn" id="btnjoin">进入闯关</button>
+    <p style="font-size:11px;color:var(--dim);text-align:center;margin-top:16px;line-height:1.8;">
+      五关连续完成，中途可以退出，下次打开会回到进度
+    </p>
+  </div>
+</div>
+
+<!-- 2 关卡 -->
+<div class="screen" id="s-play">
+  <div class="top">
+    <div class="name" id="topname">—</div>
+    <div class="sc">总分 <b id="topscore">0</b></div>
+  </div>
+  <div class="steps" id="steps"></div>
+  <div id="levelbody"></div>
+  <div class="bottom" id="bottombar"></div>
+</div>
+
+<!-- 3 通关 -->
+<div class="screen" id="s-end">
+  <div style="flex:1;">
+    <div style="font-size:11px;letter-spacing:3px;color:var(--gold);text-align:center;font-weight:700;margin-bottom:14px;">ALL CLEAR · 五关通关</div>
+    <div class="scorebig"><span id="finalscore">0</span><small>分</small></div>
+    <div class="scorelbl" id="endteam">TOTAL</div>
+    <div class="cardshelf" id="shelf"></div>
+    <div class="gain">
+      <div class="h"><span>你收集到的策略卡</span><b id="cardcnt">0 张</b></div>
+      <p id="cardlist">—</p>
+    </div>
+    <div class="gain" style="border-color:rgba(255,201,77,.5);">
+      <div class="h"><span>最后一件事</span><b style="font-size:14px;color:var(--gold);">报分给老师</b></div>
+      <p>点下面的按钮生成成绩码，举手示意老师，老师会把它录入大屏排行榜。<br>
+         然后截屏保存这一页——它是你今天的闯关证明。</p>
+    </div>
+  </div>
+  <div class="bottom">
+    <button class="btn" onclick="showCode()">生成成绩码，报给老师</button>
+  </div>
+</div>
+
+<!-- 成绩码弹窗 -->
+<div class="modal" id="modal">
+  <div class="box">
+    <h3 id="mTitle">成绩码</h3>
+    <p id="mSub">把这串字读给老师，或让老师扫这个码</p>
+    <div class="code" id="mCode">—</div>
+    <div id="mQr" style="background:#fff;padding:10px;border-radius:12px;display:none;margin-bottom:16px;"></div>
+    <button class="btn ghost" onclick="document.getElementById('modal').classList.remove('on')">关闭</button>
+  </div>
+</div>
+
+<script>
+/* ==================================================================
+   题库配置区 —— 想换成你自己专业的内容，改这里即可
+   ================================================================== */
+
+// 第一关：12 个真词 + 6 个干扰词
+const L1_REAL = ["游标卡尺","公差","焊缝","梯形","继电器","万用表","疲劳强度","退火","轴承","装配","量规","齿轮"];
+const L1_FAKE = ["光合作用","通货膨胀","五线谱","抗体","彗星","排比句"];
+
+// 第二关：归因
+const L2 = [
+  {q:"实训操作失败了三次，同组同学一次就成功。你的第一反应是——",
+   o:[{t:"我就是手笨，天生不适合干这行", k:0, why:"能力归因 + 稳定 + 不可控——这是习得性无助的标准配方。三次之后你就不想再碰机器了。"},
+      {t:"我的动作要领还没找准，得请老师看一下", k:2, why:"策略归因，可控。这是唯一能推动你再试一次的解释。"},
+      {t:"今天机器状态不好，跟我没关系", k:1, why:"全推外部，情绪上舒服，但你也顺手丢掉了改进的抓手。"}]},
+  {q:"高数期中 42 分。下面哪句话最可能让你下次考好？",
+   o:[{t:"我数学就是不行", k:0, why:"把失败钉死在能力上，动机直接归零。"},
+      {t:"题太难了，怪出题", k:1, why:"外部归因，情绪好受，但下次还是同样的错。"},
+      {t:"我这次是刷题量不够、题型没归类", k:2, why:"努力 + 策略归因，两个都可控，动机立刻回血。"}]},
+  {q:"老师夸你「你在机械方面很有天赋」，这句话的风险是——",
+   o:[{t:"会让我骄傲", k:1, why:"风险不在这。夸人不会直接让人骄傲。"},
+      {t:"把成绩归给天赋后，我就怕输、不敢挑战难任务", k:2, why:"被夸「天赋」的学生更倾向回避挑战——因为失败会威胁「我有天赋」这个身份。"},
+      {t:"没什么风险，多夸总是好事", k:0, why:"表扬的内容会塑造归因方式，归因方式会塑造后续行为，这是有代价的。"}]}
+];
+
+// 第三关：高原现象
+const L3 = [
+  {q:"技能练到某个阶段突然「怎么练都不进步了」，这叫——",
+   o:[{t:"天赋到顶了", k:0, why:"高原期是阶段性现象，不是天花板。绝大多数人到不了「天赋上限」。"},
+      {t:"高原现象", k:2, why:"正确。它通常出现在「快要自动化」之前——旧习惯和新动作在打架。"},
+      {t:"练得还不够多", k:1, why:"高原期的解法恰恰不是「再多练」，而是换一种练法。"}]},
+  {q:"突破高原期，最有效的做法是——",
+   o:[{t:"加练时间，从每天 3 小时加到 6 小时", k:0, why:"低质量的重复只会把错误动作练得更牢。"},
+      {t:"把技能拆成环节，找出最弱的一环单独练并拿反馈", k:2, why:"刻意练习的核心：分解 + 对准弱点 + 具体反馈。这跟「练习」是两件事。"},
+      {t:"先停一段时间，等感觉回来", k:1, why:"休息有帮助，但不能替代针对性练习。"}]}
+];
+
+// 第四关：纸杯用途（分值越高，越跳出「容器」这个功能固着）
+const L4_ITEM = "一次性纸杯";
+const L4_OPTS = [
+  {t:"当笔筒", s:1, type:"常规用途"},
+  {t:"当量杯量米", s:1, type:"常规用途"},
+  {t:"剪开当漏斗给设备加油", s:2, type:"场景迁移"},
+  {t:"杯底扎孔做育苗盆", s:2, type:"场景迁移"},
+  {t:"叠起来做手机支架", s:2, type:"结构改造"},
+  {t:"揉碎掺进混凝土做轻质填充骨料", s:3, type:"跨领域组合"},
+  {t:"当传声筒做声学实验", s:3, type:"跨领域组合"},
+  {t:"杯口剪锯齿当简易剥线器护套", s:3, type:"专业嫁接"}
+];
+
+// 关卡元信息
+const LV = [
+  {n:1, tag:"记忆关", title:"遗忘的陷阱"},
+  {n:2, tag:"动机关", title:"命运信封"},
+  {n:3, tag:"技能关", title:"高原突围"},
+  {n:4, tag:"创造关", title:"一物百用"},
+  {n:5, tag:"迁移关", title:"我的策略方案"}
+];
+const CARD_NAMES = [
+  "间隔重复+精细加工","归因重塑+成长型对话","刻意练习+分解反馈",
+  "发散-收敛+SCAMPER","元认知+计划具体化"
+];
+
+/* ==================================================================
+   状态
+   ================================================================== */
+const KEY = "lc_game_v1";
+let G = {
+  name: "", scores: {}, answers: {}, level: 1, done: false
+};
+let S = { tmpPicks: [], tmpChosen: new Set() };
+
+function load(){
+  try{
+    const d = JSON.parse(localStorage.getItem(KEY) || "null");
+    if(d && d.name) G = Object.assign(G, d);
+  }catch(e){}
+}
+function persist(){ localStorage.setItem(KEY, JSON.stringify(G)); }
+
+const $ = s => document.querySelector(s);
+function show(id){
+  document.querySelectorAll('.screen').forEach(e=>e.classList.remove('on'));
+  $(id).classList.add('on');
+  window.scrollTo(0,0);
+}
+let tt;
+function toast(m, ms=1900){
+  const t = $('#toast'); t.textContent = m; t.classList.add('on');
+  clearTimeout(tt); tt = setTimeout(()=>t.classList.remove('on'), ms);
+}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function total(){ return Object.values(G.scores).reduce((a,b)=>a+b,0); }
+function shake(){
+
+}
+
+/* ==================================================================
+   加入
+   ================================================================== */
+load();
+$('#teamname').value = G.name || "";
+
+$('#btnjoin').onclick = ()=>{
+  const n = $('#teamname').value.trim();
+  if(!n){ toast("先给队伍起个名字"); return; }
+  const isNew = (n !== G.name);
+  G.name = n;
+  if(isNew){
+    // 换队名视为重开
+    G.scores = {}; G.answers = {}; G.level = 1; G.done = false;
+  }
+  persist();
+  $('#topname').textContent = G.name;
+  if(G.done){ renderEnd(); return; }
+  goLevel(G.level || 1);
+};
+$('#teamname').addEventListener('keydown', e=>{ if(e.key==='Enter') $('#btnjoin').click(); });
+
+/* ==================================================================
+   进度条
+   ================================================================== */
+function renderSteps(cur){
+  const b = $('#steps'); b.innerHTML = '';
+  for(let i=1;i<=5;i++){
+    const d = document.createElement('i');
+    if(G.scores[i]!==undefined) d.className = 'done';
+    else if(i===cur) d.className = 'now';
+    b.appendChild(d);
+  }
+  $('#topscore').textContent = total();
+}
+
+/* ==================================================================
+   关卡调度
+   ================================================================== */
+function goLevel(lid){
+  if(lid > 5){ renderEnd(); return; }
+  G.level = lid; persist();
+  show('#s-play');
+  renderSteps(lid);
+  $('#topscore').textContent = total();
+  $('#bottombar').innerHTML = '';
+  if(lid===1) L1_Intro();
+  else if(lid===2) MCQ(2);
+  else if(lid===3) MCQ(3);
+  else if(lid===4) L4_Play();
+  else if(lid===5) L5_Play();
+}
+
+/* -------- 第一关 -------- */
+function L1_Intro(){
+  const body = $('#levelbody');
+  $('#bottombar').innerHTML = '';
+  body.innerHTML = `
+    <div class="lvno">第 1 关 · 记忆关</div>
+    <div class="lvt">遗忘的陷阱</div>
+    <p class="lvd">先记住下面这 12 个词。<br>时间一到它们会消失，然后你要从 18 个词里<b>只挑出刚才出现过的</b>。选错要扣分。</p>
+    <div class="wordgrid" id="wg"></div>
+    <div class="timer" id="t1">20</div>
+    <p style="text-align:center;font-size:12px;color:var(--dim)">准备好了就看，不要抄</p>
+  `;
+  const wg = $('#wg');
+  L1_REAL.forEach(w=>{ const s=document.createElement('span'); s.textContent=w; wg.appendChild(s); });
+  let left = 20;
+  const t = setInterval(()=>{
+    left--;
+    const el = $('#t1');
+    if(!el){ clearInterval(t); return; }
+    el.textContent = left;
+    if(left<=5) el.classList.add('warn');
+    if(left<=0){ clearInterval(t); L1_Quiz(); }
+  }, 1000);
+}
+
+function L1_Quiz(){
+  const body = $('#levelbody');
+  const all = L1_REAL.concat(L1_FAKE);
+  // 打乱
+  for(let i=all.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [all[i],all[j]]=[all[j],all[i]]; }
+  S.tmpChosen = new Set();
+  body.innerHTML = `
+    <div class="lvno">第 1 关 · 记忆关</div>
+    <div class="lvt">哪些词刚才出现过？</div>
+    <p class="lvd">选错扣 5 分，宁缺毋滥。</p>
+    <div id="opts"></div>
+    <p style="font-size:12px;color:var(--dim);text-align:center;margin:14px 0 8px;">已选 <b id="cnt" style="color:var(--gold)">0</b> 个</p>
+  `;
+  const ob = $('#opts');
+  all.forEach(w=>{
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.innerHTML = `<span class="idx"></span>${esc(w)}`;
+    b.onclick = ()=>{
+      if(S.tmpChosen.has(w)){ S.tmpChosen.delete(w); b.classList.remove('sel'); }
+      else { S.tmpChosen.add(w); b.classList.add('sel'); }
+      $('#cnt').textContent = S.tmpChosen.size;
+    };
+    ob.appendChild(b);
+  });
+  $('#bottombar').innerHTML = '';
+  const btn = document.createElement('button');
+  btn.className='btn'; btn.textContent='提交';
+  btn.onclick = ()=>{
+    if(S.tmpChosen.size===0){ toast("一个都没选？"); return; }
+    const real = new Set(L1_REAL), fake = new Set(L1_FAKE);
+    let hit=0, mis=0;
+    S.tmpChosen.forEach(w=>{ if(real.has(w)) hit++; else if(fake.has(w)) mis++; });
+    const score = Math.max(0, Math.min(100, hit*8 - mis*5));
+    G.scores[1] = score;
+    persist();
+    renderSteps(2);
+    $('#topscore').textContent = total();
+    body.innerHTML = `
+      <div class="lvno">第 1 关 · 结果</div>
+      <div class="lvt">你找回了 ${hit} / 12 个</div>
+      <div class="fb ${mis===0?'good':'mid'}">
+        ${mis>0?`误选了 <b>${mis}</b> 个干扰词。`:''}
+        ${hit>=10?'你的记忆比你以为的好——但你记住的往往是"有画面、和专业有关"的词。':''}
+        ${hit<6?'大部分词掉得很快，这就是遗忘曲线的真实速度。':''}
+      </div>
+      <div class="fb info">
+        <div class="hd">这张策略卡给你</div>
+        <b>间隔重复 + 精细加工</b><br>
+        遗忘是大脑的默认设置，不是你的失败。对抗它的办法不是"多背几遍"，而是在<b>快忘时复习</b>，并给材料<b>接上已有的钩子</b>——比如每个新概念都配一个你专业里的例子。
+      </div>
+      <div class="fb mid">本关得分 <b>${score}</b> 分　累计 <b>${total()}</b> 分</div>
+    `;
+    $('#bottombar').innerHTML = '';
+    const nb = document.createElement('button');
+    nb.className='btn'; nb.textContent='领取策略卡，进入第 2 关';
+    nb.onclick = ()=> goLevel(2);
+    $('#bottombar').appendChild(nb);
+  };
+  $('#bottombar').appendChild(btn);
+}
+
+/* -------- 第二/三关：单选 -------- */
+function MCQ(lid){
+  const qs = lid===2 ? L2 : L3;
+  let qi = 0, picks = [];
+  const body = $('#levelbody');
+
+  function draw(){
+    const q = qs[qi];
+    body.innerHTML = `
+      <div class="lvno">第 ${lid} 关 · ${LV[lid-1].tag}</div>
+      <div class="lvt" style="font-size:22px">${LV[lid-1].title}</div>
+      <div class="qnum">第 ${qi+1} / ${qs.length} 题</div>
+      <div class="question">${esc(q.q)}</div>
+      <div id="opts"></div>
+    `;
+    const ob = $('#opts');
+    q.o.forEach((o,i)=>{
+      const b = document.createElement('button');
+      b.className='opt';
+      b.innerHTML = `<span class="idx">${'ABC'[i]}</span>${esc(o.t)}`;
+      b.onclick = ()=>{
+        ob.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel'));
+        b.classList.add('sel');
+        picks[qi] = i;
+        nb.disabled = false;
+      };
+      ob.appendChild(b);
+    });
+    $('#bottombar').innerHTML='';
+    const nb = document.createElement('button');
+    nb.className='btn';
+    nb.textContent = qi===qs.length-1 ? '提交答案' : '下一题';
+    nb.disabled = true;
+    nb.onclick = ()=>{
+      if(qi < qs.length-1){ qi++; draw(); window.scrollTo(0,0); return; }
+      // 判定
+      let right=0;
+      const detail = qs.map((q,i)=>{
+        const best = q.o.findIndex(o=>o.k===2);
+        const ok = picks[i]===best;
+        if(ok) right++;
+        return {q, ok, best, mine:picks[i]};
+      });
+      const score = Math.round(right/qs.length*100);
+      G.scores[lid] = score;
+      G.answers[lid] = picks;
+      persist();
+      renderSteps(lid+1);
+      $('#topscore').textContent = total();
+      body.innerHTML = `
+        <div class="lvno">第 ${lid} 关 · 结果</div>
+        <div class="lvt">答对 ${right} / ${qs.length}</div>
+        <div class="lvd" style="margin-bottom:8px;">逐题看解析——错的题才是这一关的重点</div>
+        ${detail.map((d,i)=>`
+          <div class="fb ${d.ok?'good':'bad'}">
+            <div class="hd">第 ${i+1} 题　${d.ok?'✓ 你选对了':'✗ 最佳答案：'+esc(d.q.o[d.best].t)}</div>
+            ${esc(d.q.o[d.best].why)}
+          </div>`).join('')}
+        <div class="fb info">
+          <div class="hd">这张策略卡给你</div>
+          <b>${CARD_NAMES[lid-1]}</b><br>
+          ${lid===2
+            ? '让人放弃的从来不是失败，而是「我不行 + 永远不行 + 改不了」这个组合。把能力归因换成努力或策略归因，动机就回来了。'
+            : '技能学习有高原期，卡住常因为你在重复同一个错误动作。突破靠拆解 + 对准最弱一环 + 拿到具体反馈，而不是更努力地重复。'}
+        </div>
+        <div class="fb mid">本关得分 <b>${score}</b> 分　累计 <b>${total()}</b> 分</div>
+      `;
+      $('#bottombar').innerHTML='';
+      const b2 = document.createElement('button');
+      b2.className='btn'; b2.textContent = '领取策略卡，进入第 '+(lid+1)+' 关';
+      b2.onclick = ()=> goLevel(lid+1);
+      $('#bottombar').appendChild(b2);
+    };
+    $('#bottombar').appendChild(nb);
+  }
+  draw();
+}
+
+/* -------- 第四关 -------- */
+function L4_Play(){
+  const body = $('#levelbody');
+  const chosen = new Set();
+  let left = 120, done=false;
+
+  body.innerHTML = `
+    <div class="lvno">第 4 关 · 创造关</div>
+    <div class="lvt">一物百用</div>
+    <p class="lvd">面对 <b>${L4_ITEM}</b>，选出你们组能想到的所有用途。<br>
+      越"不像常规用法"的，分越高。别怕离谱——<b>这一关离常规越远越值钱</b>。</p>
+    <div class="timer" id="t4">120</div>
+    <div id="opts"></div>
+  `;
+  const ob = $('#opts');
+  const idxs = L4_OPTS.map((_,i)=>i);
+  for(let i=idxs.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [idxs[i],idxs[j]]=[idxs[j],idxs[i]]; }
+  idxs.forEach(i=>{
+    const o = L4_OPTS[i];
+    const b = document.createElement('button');
+    b.className='opt';
+    b.innerHTML = `<span class="idx"></span>${esc(o.t)}`;
+    b.onclick = ()=>{
+      if(chosen.has(i)){ chosen.delete(i); b.classList.remove('sel'); }
+      else { chosen.add(i); b.classList.add('sel'); }
+    };
+    ob.appendChild(b);
+  });
+
+  const btn = document.createElement('button');
+  btn.className='btn';
+  btn.textContent = '提交（还剩 120 秒）';
+  $('#bottombar').innerHTML=''; $('#bottombar').appendChild(btn);
+
+  function finish(){
+    if(done) return; done = true;
+    clearInterval(timer);
+    let raw=0; const types=[];
+    chosen.forEach(i=>{ raw += L4_OPTS[i].s; types.push(L4_OPTS[i].type); });
+    const score = Math.min(100, raw*5);
+    G.scores[4] = score; G.answers[4] = Array.from(chosen); persist();
+    renderSteps(5);
+    $('#topscore').textContent = total();
+    const cross = types.some(t=>t.indexOf('跨领域')>=0 || t.indexOf('专业')>=0);
+    const uniq = Array.from(new Set(types));
+    body.innerHTML = `
+      <div class="lvno">第 4 关 · 结果</div>
+      <div class="lvt">你想到 ${chosen.size} 个</div>
+      <div class="fb ${cross?'good':'mid'}">
+        ${cross
+          ? '你们跳出了"杯子就是用来装水的"这个框——<b>功能固着被打破了</b>。跨领域嫁接是创造性最强的用法。'
+          : '你们的用途还集中在"容器"这个功能上——这就是<b>功能固着</b>。试试问：如果把它的材料、形状、使用场景全换掉呢？'}
+        ${uniq.length?`<br><span style="opacity:.8;font-size:12.5px;">你们的思路类型：${uniq.join(" / ")}</span>`:''}
+      </div>
+      <div class="fb info">
+        <div class="hd">这张策略卡给你</div>
+        <b>发散—收敛 + SCAMPER</b><br>
+        创造的敌人是功能固着。正确姿势是<b>两次思考</b>：先不管对错地多（发散），再有标准地选（收敛）。
+        很多人卡住，是因为在第一阶段就自我审查了。<br>
+        改造时用七个字追问：<b>替代·组合·借用·修改·他用·消除·重组</b>。
+      </div>
+      <div class="fb mid">本关得分 <b>${score}</b> 分　累计 <b>${total()}</b> 分</div>
+    `;
+    $('#bottombar').innerHTML='';
+    const nb = document.createElement('button');
+    nb.className='btn'; nb.textContent='领取策略卡，进入第 5 关';
+    nb.onclick = ()=> goLevel(5);
+    $('#bottombar').appendChild(nb);
+  }
+  btn.onclick = finish;
+  const timer = setInterval(()=>{
+    left--;
+    const el = $('#t4');
+    if(!el){ clearInterval(timer); return; }
+    el.textContent = left;
+    btn.textContent = '提交（还剩 '+left+' 秒）';
+    if(left<=15) el.classList.add('warn');
+    if(left<=0) finish();
+  }, 1000);
+}
+
+/* -------- 第五关 -------- */
+function L5_Play(){
+  const body = $('#levelbody');
+  body.innerHTML = `
+    <div class="lvno">第 5 关 · 迁移关</div>
+    <div class="lvt">我的策略方案</div>
+    <p class="lvd">这是整节课的落点。把前面四张策略卡，用在你<b>真实</b>的学习问题上。</p>
+    <div class="hintbox no"><b>写这些不得分：</b>「我要更努力」「多复习」「上课认真听」</div>
+    <div class="hintbox"><b>这样写才得分：</b>「每周三晚 8:00，先写实训报告里最难的数据分析部分 25 分钟，连续 3 周提前 2 天交」</div>
+    <textarea id="t5" rows="8" placeholder="我的问题是……&#10;我准备用【第几张策略卡】……&#10;具体做法：每周_晚_点，做_分钟，先做_&#10;怎么判断有效：……"></textarea>
+    <div id="chk" style="margin-top:12px;font-size:12.5px;line-height:2.2;color:var(--dim)"></div>
+  `;
+  const ta = $('#t5'), chk = $('#chk');
+  if(G.answers[5]) ta.value = G.answers[5];
+
+  function check(){
+    const v = ta.value;
+    const w = /周[一二三四五六日天]|周|每天|今晚|明天|早上|中午|晚上|\d{1,2}点/.test(v);
+    const h = /分钟|小时|min/.test(v);
+    chk.innerHTML = `
+      ${v.length>=40?'✅':'⬜'} 字数（${v.length}/40）　
+      ${w?'✅':'⬜'} 写了"哪天"　
+      ${h?'✅':'⬜'} 写了"多久"`;
+    return {w,h,len:v.length};
+  }
+  ta.oninput = check; check();
+
+  const btn = document.createElement('button');
+  btn.className='btn'; btn.textContent='提交方案';
+  $('#bottombar').innerHTML=''; $('#bottombar').appendChild(btn);
+
+  btn.onclick = ()=>{
+    const v = ta.value.trim();
+    if(v.length < 25){ toast("太短了，再具体一点"); return; }
+    const c = check();
+    const score = 40 + (c.w?20:0) + (c.h?20:0) + (c.len>=40?20:0);
+    G.scores[5] = score; G.answers[5] = v; G.done = true; persist();
+    renderEnd();
+  };
+}
+
+/* ==================================================================
+   结束页
+   ================================================================== */
+function renderEnd(){
+  const sc = total();
+  $('#finalscore').textContent = sc;
+  $('#endteam').textContent = (G.name || '').toUpperCase() || 'TOTAL';
+  const shelf = $('#shelf'); shelf.innerHTML = '';
+  let got = 0;
+  for(let i=1;i<=5;i++){
+    const d = document.createElement('i');
+    if(G.scores[i]!==undefined){
+      d.className = 'got';
+      d.innerHTML = 'CARD<br>0'+i;
+      got++;
+    } else d.innerHTML = 'CARD<br>0'+i;
+    shelf.appendChild(d);
+  }
+  $('#cardcnt').textContent = got + ' 张';
+  $('#cardlist').innerHTML = got
+    ? CARD_NAMES.slice(0,got).map((n,i)=>`0${i+1}　${n}`).join('<br>')
+    : '还没有收集到策略卡';
+  show('#s-end');
+}
+
+/* ==================================================================
+   成绩码
+   ================================================================== */
+function makeCode(){
+  // 格式：组名|总分|各关分
+  const lv = [1,2,3,4,5].map(i=> G.scores[i]===undefined?"-":G.scores[i]).join(",");
+  return `${G.name}|${total()}|${lv}`;
+}
+
+function showCode(){
+  const code = makeCode();
+  $('#mTitle').textContent = G.name;
+  $('#mSub').textContent = '把这串码报给老师，或让老师扫码录入';
+  $('#mCode').textContent = code;
+  // 生成二维码（在线API；离线时降级为只显示文字码）
+  const qr = $('#mQr');
+  qr.style.display = 'block';
+  qr.innerHTML = `<img style="width:100%;border-radius:6px;display:block" src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=0&data=${encodeURIComponent(code)}" alt="成绩码">`;
+  $('#modal').classList.add('on');
+}
+
+/* 启动 */
+if(G.name && G.scores && Object.keys(G.scores).length){
+  $('#topname').textContent = G.name;
+  if(G.done) renderEnd();
+  else goLevel(G.level || 1);
+}
+</script>
+</body>
+</html>
